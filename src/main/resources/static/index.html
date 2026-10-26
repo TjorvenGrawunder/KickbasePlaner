@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7f2">
+    <meta name="description" content="Melde dich beim Kickbase Planer an und plane deinen Spieltag.">
+    <title>Anmelden · Kickbase Planer</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="login-layout">
+    <div class="login-card">
+        <section class="login-panel" aria-labelledby="login-title">
+            <a class="brand" href="/" aria-label="Kickbase Planer Startseite">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 4v16M18 4l-8 8 8 8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span>Kickbase<span class="brand-light">Planer</span></span>
+            </a>
+
+            <div class="intro">
+                <p class="eyebrow"><span class="eyebrow-dot"></span>Dein Team wartet</p>
+                <h1 id="login-title">Schön, dass<br>du wieder da bist.</h1>
+                <p class="subtitle">Melde dich an und mach deinen Spieltag zum Heimspiel.</p>
+            </div>
+
+            <form id="login-form" action="/api/kickbase/login" method="post">
+                <p id="login-error" class="notice error-notice" role="alert" hidden></p>
+                <div class="field">
+                    <label for="email">E-Mail-Adresse</label>
+                    <div class="input-wrap">
+                        <svg class="field-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="3.5" y="5" width="17" height="14" rx="3" stroke="currentColor" stroke-width="1.7"/>
+                            <path d="m5 7 7 5.5L19 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="name@beispiel.de"
+                                autocomplete="email"
+                                required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="password">Passwort</label>
+                    <div class="input-wrap">
+                        <svg class="field-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="4.5" y="10" width="15" height="11" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        </svg>
+                        <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="Dein Passwort"
+                                autocomplete="current-password"
+                                required>
+                    </div>
+                </div>
+
+                <button type="submit">
+                    <span class="button-label">Anmelden</span>
+                    <span class="button-arrow" aria-hidden="true">↗</span>
+                </button>
+            </form>
+
+            <div class="privacy-note">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M10 2.5 16 5v4.2c0 4-2.5 6.7-6 8.3-3.5-1.6-6-4.3-6-8.3V5l6-2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="m7.5 9.8 1.7 1.7 3.4-3.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Deine Verbindung ist geschützt</span>
+            </div>
+        </section>
+
+        <aside class="feature-panel" aria-label="Kickbase Planer">
+            <div class="feature-glow"></div>
+            <div class="feature-topline">
+                <span class="live-indicator"><span></span>SAISON 25/26</span>
+                <span class="feature-mark" aria-hidden="true">K</span>
+            </div>
+
+            <div class="pitch" aria-hidden="true">
+                <div class="pitch-halfway"></div>
+                <div class="pitch-circle"></div>
+                <div class="pitch-box pitch-box-top"></div>
+                <div class="pitch-box pitch-box-bottom"></div>
+                <span class="player player-one"></span>
+                <span class="player player-two"></span>
+                <span class="player player-three"></span>
+                <span class="player player-four"></span>
+                <span class="player player-five"></span>
+                <span class="player player-six"></span>
+                <span class="player player-seven"></span>
+                <span class="player player-eight"></span>
+                <span class="player player-nine"></span>
+                <span class="player player-ten"></span>
+            </div>
+
+            <div class="feature-copy">
+                <p class="feature-kicker">Mehr Überblick. Mehr Spielgefühl.</p>
+                <h2>Dein Spieltag.<br><span>Dein Plan.</span></h2>
+                <p>Alle Spieler im Blick. Jede Entscheidung zählt. Bring deine Mannschaft nach vorn.</p>
+            </div>
+
+            <div class="match-card">
+                <div class="match-icon" aria-hidden="true">✦</div>
+                <div>
+                    <p class="match-label">BEREIT FÜR DEN ANPFIFF?</p>
+                    <p class="match-caption">Deine Aufstellung wartet auf dich.</p>
+                </div>
+                <span class="match-chevron" aria-hidden="true">↗</span>
+            </div>
+            <span class="panel-caption">DEIN MANAGER-MOMENT BEGINNT HIER</span>
+        </aside>
+    </div>
+    <dialog id="league-dialog" class="league-dialog" aria-labelledby="dialog-title">
+        <div class="dialog-header">
+            <div class="dialog-icon" aria-hidden="true">K</div>
+            <button id="close-dialog" class="dialog-close" type="button" aria-label="Fenster schließen">×</button>
+        </div>
+        <p class="dialog-eyebrow">Anmeldung erfolgreich</p>
+        <h2 id="dialog-title">Wähle deine Liga</h2>
+        <p id="dialog-description" class="dialog-description">In welcher Liga möchtest du deinen Kader ansehen?</p>
+        <p id="dialog-error" class="notice error-notice" role="alert" hidden></p>
+        <ul id="league-list" class="league-list" aria-label="Verfügbare Ligen"></ul>
+    </dialog>
+    <dialog id="squad-dialog" class="league-dialog squad-dialog" aria-labelledby="squad-title">
+        <div class="dialog-header">
+            <div class="dialog-icon" aria-hidden="true">K</div>
+            <button id="close-squad-dialog" class="dialog-close" type="button" aria-label="Fenster schließen">×</button>
+        </div>
+        <section id="squad-view" class="squad-view">
+            <div class="squad-heading">
+                <div>
+                    <p class="dialog-eyebrow">Deine Mannschaft</p>
+                    <h2 id="squad-title">Dein Kader</h2>
+                    <p id="squad-message" class="squad-message"></p>
+                </div>
+                <button id="back-to-leagues" class="back-button" type="button">Liga wechseln</button>
+            </div>
+            <div class="value-summary" aria-live="polite">
+                <div class="value-card starting-value-card">
+                    <span class="value-label">STARTELF</span>
+                    <strong id="starting-value">0 €</strong>
+                    <span id="starting-count" class="value-count">0 von 11 Spielern</span>
+                </div>
+                <div class="value-card">
+                    <span class="value-label">RESTKADER</span>
+                    <strong id="bench-value">0 €</strong>
+                    <span id="bench-count" class="value-count">0 Spieler</span>
+                </div>
+                <div class="value-card total-value-card">
+                    <span class="value-label">GESAMTKADER</span>
+                    <strong id="total-value">0 €</strong>
+                    <span id="total-count" class="value-count">0 Spieler</span>
+                </div>
+            </div>
+            <div class="squad-layout">
+                <section class="pitch-section" aria-labelledby="formation-title">
+                    <div class="section-heading">
+                        <div>
+                            <h3 id="formation-title">Aufstellung</h3>
+                            <p id="formation-description">Spieler auf einen Platz ziehen</p>
+                        </div>
+                        <label class="formation-select-label" for="formation-select">
+                            Formation
+                            <select id="formation-select" name="formation">
+                                <option value="3-4-3">3-4-3</option>
+                                <option value="4-2-4">4-2-4</option>
+                                <option value="4-4-2">4-4-2</option>
+                                <option value="3-5-2">3-5-2</option>
+                                <option value="4-5-1">4-5-1</option>
+                                <option value="5-2-3">5-2-3</option>
+                                <option value="5-3-2">5-3-2</option>
+                                <option value="4-3-3" selected>4-3-3</option>
+                                <option value="5-4-1">5-4-1</option>
+                                <option value="3-6-1">3-6-1</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="formation-pitch" class="formation-pitch" aria-label="Aufstellung 4-3-3">
+                        <div class="pitch-end pitch-end-top" aria-hidden="true"></div>
+                        <div class="formation-line attack-line" data-line="attack"></div>
+                        <div class="formation-line midfield-line" data-line="midfield"></div>
+                        <div class="formation-line defense-line" data-line="defense"></div>
+                        <div class="formation-line keeper-line" data-line="keeper"></div>
+                        <div class="pitch-end pitch-end-bottom" aria-hidden="true"></div>
+                    </div>
+                </section>
+                <section class="bench-section" aria-labelledby="bench-title">
+                    <div class="section-heading bench-heading">
+                        <div>
+                            <h3 id="bench-title">Restkader <span id="bench-heading-count"></span></h3>
+                            <p>Antippen oder auf einen Platz ziehen</p>
+                        </div>
+                    </div>
+                    <ul id="bench-list" class="bench-list" aria-label="Spieler im Restkader"></ul>
+                    <p id="empty-bench" class="empty-bench" hidden>Alle Spieler stehen in der Startelf.</p>
+                    <p id="lineup-hint" class="lineup-hint" role="status" aria-live="polite"></p>
+                </section>
+            </div>
+        </section>
+    </dialog>
+</main>
+<script>
+    const loginForm = document.getElementById("login-form");
+    const loginButton = loginForm.querySelector("button[type=submit]");
+    const loginError = document.getElementById("login-error");
+    const leagueDialog = document.getElementById("league-dialog");
+    const squadDialog = document.getElementById("squad-dialog");
+    const leagueList = document.getElementById("league-list");
+    const dialogError = document.getElementById("dialog-error");
+    let availableLeagues = [];
+    let squadPlayers = [];
+    let startingPlayerIds = Array(11).fill(null);
+    let draggedPlayerId = null;
+    let lineupHint = "";
+    let activeFormation = "4-3-3";
+    const formations = {
+        "3-4-3": { defense: 3, midfield: 4, attack: 3 },
+        "4-2-4": { defense: 4, midfield: 2, attack: 4 },
+        "4-4-2": { defense: 4, midfield: 4, attack: 2 },
+        "3-5-2": { defense: 3, midfield: 5, attack: 2 },
+        "4-5-1": { defense: 4, midfield: 5, attack: 1 },
+        "5-2-3": { defense: 5, midfield: 2, attack: 3 },
+        "5-3-2": { defense: 5, midfield: 3, attack: 2 },
+        "4-3-3": { defense: 4, midfield: 3, attack: 3 },
+        "5-4-1": { defense: 5, midfield: 4, attack: 1 },
+        "3-6-1": { defense: 3, midfield: 6, attack: 1 }
+    };
+    const euroFormatter = new Intl.NumberFormat("de-DE", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+    });
+
+    async function postJson(url, data) {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || "Die Anfrage konnte nicht verarbeitet werden.");
+        }
+        return result;
+    }
+
+    function showDialogError(message) {
+        dialogError.textContent = message;
+        dialogError.hidden = false;
+    }
+
+    function renderLeagues(leagues) {
+        availableLeagues = leagues;
+        leagueList.replaceChildren();
+        leagueList.hidden = false;
+        dialogError.hidden = true;
+
+        if (leagues.length === 0) {
+            showDialogError("Zu diesem Kickbase-Konto wurden keine Ligen gefunden.");
+            return;
+        }
+
+        for (const league of leagues) {
+            const item = document.createElement("li");
+            const button = document.createElement("button");
+            button.className = "league-option";
+            button.type = "button";
+            button.innerHTML = '<span class="league-badge" aria-hidden="true">L</span>';
+            const name = document.createElement("span");
+            name.className = "league-name";
+            name.textContent = league.name;
+            const arrow = document.createElement("span");
+            arrow.className = "league-arrow";
+            arrow.setAttribute("aria-hidden", "true");
+            arrow.textContent = "→";
+            button.append(name, arrow);
+            button.addEventListener("click", () => selectLeague(league, button));
+            item.append(button);
+            leagueList.append(item);
+        }
+    }
+
+    async function selectLeague(league, selectedButton) {
+        for (const button of leagueList.querySelectorAll("button")) {
+            button.disabled = true;
+        }
+        selectedButton.classList.add("is-loading");
+        dialogError.hidden = true;
+
+        try {
+            const squad = await postJson("/api/kickbase/squad", { leagueId: league.id });
+            squadPlayers = Array.isArray(squad.it) ? squad.it.map((player, index) => ({
+                id: String(player.pi || `player-${index}`),
+                name: player.pn || "Unbekannter Spieler",
+                value: Number.isFinite(Number(player.mv)) ? Number(player.mv) : 0
+            })) : [];
+            startingPlayerIds = Array(11).fill(null);
+            lineupHint = "";
+            activeFormation = document.getElementById("formation-select").value;
+            document.getElementById("squad-title").textContent = league.name;
+            document.getElementById("squad-message").textContent =
+                `${squadPlayers.length} Spieler · Ziehe Spieler in die Aufstellung oder tippe sie an.`;
+            renderSquad();
+            leagueDialog.close();
+            squadDialog.showModal();
+        } catch (error) {
+            showDialogError(error.message);
+            for (const button of leagueList.querySelectorAll("button")) {
+                button.disabled = false;
+                button.classList.remove("is-loading");
+            }
+        }
+    }
+
+    function createPlayerCard(player, className, slotIndex = null) {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = className;
+        card.draggable = true;
+        card.dataset.playerId = player.id;
+        card.textContent = player.name;
+        card.setAttribute("aria-label", slotIndex === null
+            ? `${player.name}, ${euroFormatter.format(player.value)}, zur Startelf hinzufügen`
+            : `${player.name}, ${euroFormatter.format(player.value)}, zurück in den Restkader`);
+
+        const value = document.createElement("span");
+        value.className = "player-value";
+        value.textContent = euroFormatter.format(player.value);
+        card.append(value);
+
+        card.addEventListener("dragstart", (event) => {
+            draggedPlayerId = player.id;
+            event.dataTransfer.setData("text/plain", player.id);
+            event.dataTransfer.effectAllowed = "move";
+            card.classList.add("is-dragging");
+        });
+        card.addEventListener("dragend", () => {
+            draggedPlayerId = null;
+            card.classList.remove("is-dragging");
+        });
+        card.addEventListener("click", () => {
+            if (slotIndex !== null) {
+                startingPlayerIds[slotIndex] = null;
+                lineupHint = `${player.name} wurde in den Restkader verschoben.`;
+            } else {
+                assignPlayerToFirstOpenSlot(player.id);
+            }
+            renderSquad();
+        });
+        return card;
+    }
+
+    function assignPlayerToFirstOpenSlot(playerId) {
+        const openSlot = startingPlayerIds.indexOf(null);
+        if (openSlot === -1) {
+            lineupHint = "Die Startelf ist voll. Verschiebe zuerst einen Spieler zurück in den Restkader.";
+            return;
+        }
+        startingPlayerIds[openSlot] = playerId;
+        lineupHint = "";
+    }
+
+    function remapLineup(nextFormation) {
+        const currentCounts = formations[activeFormation];
+        const nextCounts = formations[nextFormation];
+        const lines = ["attack", "midfield", "defense"];
+        const retained = [];
+        const overflow = [];
+        const nextPlayerIds = Array(11).fill(null);
+        let oldIndex = 0;
+        let nextIndex = 0;
+
+        for (const line of lines) {
+            const currentLinePlayers = startingPlayerIds.slice(oldIndex, oldIndex + currentCounts[line]);
+            oldIndex += currentCounts[line];
+            const keptPlayers = currentLinePlayers.slice(0, nextCounts[line]);
+            overflow.push(...currentLinePlayers.slice(nextCounts[line]));
+            retained.push({ players: keptPlayers, slots: nextCounts[line] });
+        }
+
+        for (const line of retained) {
+            for (const playerId of line.players) {
+                nextPlayerIds[nextIndex++] = playerId;
+            }
+            nextIndex += line.slots - line.players.length;
+        }
+
+        for (let index = 0; index < nextPlayerIds.length - 1 && overflow.length > 0; index += 1) {
+            if (nextPlayerIds[index] === null) {
+                nextPlayerIds[index] = overflow.shift();
+            }
+        }
+        nextPlayerIds[10] = startingPlayerIds[10];
+        startingPlayerIds = nextPlayerIds;
+    }
+
+    function renderSquad() {
+        const pitch = document.getElementById("formation-pitch");
+        const counts = formations[activeFormation];
+        const formationLines = [
+            { line: "attack", count: counts.attack, position: "ANG" },
+            { line: "midfield", count: counts.midfield, position: "MIT" },
+            { line: "defense", count: counts.defense, position: "ABW" },
+            { line: "keeper", count: 1, position: "TOR" }
+        ];
+        document.getElementById("formation-description").textContent =
+            `Formation ${activeFormation} · Spieler auf einen Platz ziehen`;
+        pitch.setAttribute("aria-label", `Aufstellung ${activeFormation}`);
+
+        let slotIndex = 0;
+        for (const line of formationLines) {
+            const lineElement = pitch.querySelector(`[data-line="${line.line}"]`);
+            lineElement.replaceChildren();
+            for (let positionIndex = 0; positionIndex < line.count; positionIndex += 1) {
+                const currentSlotIndex = slotIndex++;
+                const slot = document.createElement("div");
+                slot.className = "formation-slot";
+                slot.dataset.slotIndex = String(currentSlotIndex);
+                slot.addEventListener("dragover", (event) => {
+                    event.preventDefault();
+                    slot.classList.add("is-drop-target");
+                });
+                slot.addEventListener("dragleave", () => slot.classList.remove("is-drop-target"));
+                slot.addEventListener("drop", (event) => {
+                    event.preventDefault();
+                    slot.classList.remove("is-drop-target");
+                    const playerId = event.dataTransfer.getData("text/plain") || draggedPlayerId;
+                    if (!playerId) {
+                        return;
+                    }
+                    const currentPlayerSlot = startingPlayerIds.indexOf(playerId);
+                    if (currentPlayerSlot === currentSlotIndex) {
+                        return;
+                    }
+                    if (currentPlayerSlot !== -1) {
+                        startingPlayerIds[currentPlayerSlot] = null;
+                    }
+                    startingPlayerIds[currentSlotIndex] = playerId;
+                    lineupHint = "";
+                    renderSquad();
+                });
+
+                const playerId = startingPlayerIds[currentSlotIndex];
+                const player = squadPlayers.find((candidate) => candidate.id === playerId);
+                const playerArea = document.createElement("div");
+                playerArea.className = "slot-player";
+                if (player) {
+                    playerArea.append(createPlayerCard(player, "player-card lineup-player", currentSlotIndex));
+                } else {
+                    const emptySlot = document.createElement("span");
+                    emptySlot.className = "slot-empty";
+                    emptySlot.textContent = "+";
+                    playerArea.append(emptySlot);
+                }
+
+                const positionLabel = document.createElement("span");
+                positionLabel.className = "position-label";
+                positionLabel.textContent = line.position;
+                slot.append(playerArea, positionLabel);
+                lineElement.append(slot);
+            }
+        }
+
+        const startingIds = new Set(startingPlayerIds.filter(Boolean));
+        const benchPlayers = squadPlayers.filter((player) => !startingIds.has(player.id));
+        const benchList = document.getElementById("bench-list");
+        benchList.replaceChildren();
+        benchList.classList.toggle("is-drop-target", false);
+        for (const player of benchPlayers) {
+            const item = document.createElement("li");
+            item.append(createPlayerCard(player, "player-card bench-player"));
+            benchList.append(item);
+        }
+        benchList.ondragover = (event) => {
+            event.preventDefault();
+            benchList.classList.add("is-drop-target");
+        };
+        benchList.ondragleave = () => benchList.classList.remove("is-drop-target");
+        benchList.ondrop = (event) => {
+            event.preventDefault();
+            benchList.classList.remove("is-drop-target");
+            const playerId = event.dataTransfer.getData("text/plain") || draggedPlayerId;
+            const playerSlot = startingPlayerIds.indexOf(playerId);
+            if (playerSlot !== -1) {
+                startingPlayerIds[playerSlot] = null;
+                lineupHint = "";
+                renderSquad();
+            }
+        };
+
+        const startingPlayers = squadPlayers.filter((player) => startingIds.has(player.id));
+        const startingValue = startingPlayers.reduce((sum, player) => sum + player.value, 0);
+        const benchValue = benchPlayers.reduce((sum, player) => sum + player.value, 0);
+        document.getElementById("starting-value").textContent = euroFormatter.format(startingValue);
+        document.getElementById("bench-value").textContent = euroFormatter.format(benchValue);
+        document.getElementById("total-value").textContent = euroFormatter.format(startingValue + benchValue);
+        document.getElementById("starting-count").textContent = `${startingPlayers.length} von 11 Spielern`;
+        document.getElementById("bench-count").textContent = `${benchPlayers.length} Spieler`;
+        document.getElementById("total-count").textContent = `${squadPlayers.length} Spieler`;
+        document.getElementById("bench-heading-count").textContent = `(${benchPlayers.length})`;
+        document.getElementById("empty-bench").hidden = benchPlayers.length > 0;
+        document.getElementById("lineup-hint").textContent = lineupHint;
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginError.hidden = true;
+        loginButton.disabled = true;
+        loginButton.querySelector(".button-label").textContent = "Anmeldung läuft …";
+
+        try {
+            const leagues = await postJson("/api/kickbase/login", {
+                email: loginForm.elements.email.value,
+                password: loginForm.elements.password.value
+            });
+            renderLeagues(leagues);
+            leagueDialog.showModal();
+            loginForm.elements.password.value = "";
+        } catch (error) {
+            loginError.textContent = error.message;
+            loginError.hidden = false;
+        } finally {
+            loginButton.disabled = false;
+            loginButton.querySelector(".button-label").textContent = "Anmelden";
+        }
+    });
+
+    document.getElementById("close-dialog").addEventListener("click", () => leagueDialog.close());
+    document.getElementById("close-squad-dialog").addEventListener("click", () => squadDialog.close());
+    document.getElementById("formation-select").addEventListener("change", (event) => {
+        const nextFormation = event.target.value;
+        remapLineup(nextFormation);
+        activeFormation = nextFormation;
+        lineupHint = "Deine Startelf wurde an die neue Formation angepasst.";
+        renderSquad();
+    });
+    document.getElementById("back-to-leagues").addEventListener("click", () => {
+        renderLeagues(availableLeagues);
+        squadDialog.close();
+        leagueDialog.showModal();
+    });
+</script>
+</body>
+</html>
