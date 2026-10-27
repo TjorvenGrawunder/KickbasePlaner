@@ -193,6 +193,76 @@ button:focus-visible, .brand:focus-visible {
     outline-offset: 4px;
 }
 .login-panel button:disabled { cursor: wait; opacity: .72; }
+.saved-manager-section {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid #edf0ea;
+}
+.saved-manager-section h2 {
+    margin-bottom: 5px;
+    color: #354238;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    letter-spacing: 0;
+}
+.saved-manager-message {
+    margin: 0 0 10px;
+    color: #788278;
+    font-size: 11px;
+    line-height: 1.6;
+}
+.saved-manager-message.error-notice { margin: 0 0 12px; }
+.saved-manager-list {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.saved-manager-option {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #e8ece4;
+    border-radius: 10px;
+    background: #fbfcfa;
+    color: #354238;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    box-shadow: none;
+    transition: border-color 150ms ease, background 150ms ease;
+}
+.saved-manager-option:hover {
+    transform: none;
+    border-color: #bdd89e;
+    background: #f5faef;
+    box-shadow: none;
+}
+.saved-manager-option:disabled { cursor: wait; opacity: .65; }
+.saved-manager-option.is-loading {
+    border-color: #b7d497;
+    background: #f5faef;
+}
+.saved-manager-email {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.saved-manager-action {
+    flex: 0 0 auto;
+    color: #6d9444;
+    font-size: 11px;
+    font-weight: 700;
+}
 .button-arrow {
     display: grid;
     width: 25px;
@@ -302,6 +372,38 @@ button:focus-visible, .brand:focus-visible {
     margin-bottom: 23px;
 }
 .squad-heading h2 { margin-bottom: 5px; }
+.view-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    padding: 4px;
+    border-radius: 12px;
+    background: #f3f6f0;
+}
+.view-tab {
+    width: auto;
+    min-height: 38px;
+    flex: 1 1 0;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 9px;
+    background: transparent;
+    color: #788278;
+    font-size: 12px;
+    box-shadow: none;
+}
+.view-tab:hover {
+    transform: none;
+    background: #eaf0e4;
+    color: #31432f;
+    box-shadow: none;
+}
+.view-tab.is-active, .view-tab.is-active:hover {
+    background: #fff;
+    color: #29432c;
+    box-shadow: 0 2px 6px rgb(23 37 27 / 9%);
+}
+.tab-panel[hidden] { display: none; }
 .dialog-description {
     margin-bottom: 23px;
     color: #7b8578;
@@ -417,6 +519,90 @@ button:focus-visible, .brand:focus-visible {
     grid-template-columns: minmax(0, 1.3fr) minmax(275px, .7fr);
     gap: 18px;
     min-height: 450px;
+}
+.market-panel {
+    min-height: 450px;
+    padding: 17px;
+    border: 1px solid #e8ece4;
+    border-radius: 15px;
+    background: #fcfdfb;
+}
+.market-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 13px;
+}
+.market-heading h3 {
+    margin-bottom: 5px;
+    color: #263526;
+    font-size: 16px;
+}
+.market-heading p {
+    margin: 0;
+    color: #7b8578;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.market-refresh {
+    margin-top: 0;
+}
+.market-refresh:disabled {
+    cursor: wait;
+    opacity: .6;
+}
+.market-message {
+    min-height: 18px;
+    margin: 0 0 10px;
+    color: #7b8578;
+    font-size: 11px;
+    line-height: 1.6;
+}
+.market-message.error-notice { margin: 0 0 12px; }
+.market-list {
+    display: grid;
+    gap: 8px;
+    max-height: 490px;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+}
+.market-item {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid #e8ece4;
+    border-radius: 11px;
+    background: #fff;
+}
+.market-player-details, .market-prices {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+.market-player-name {
+    overflow: hidden;
+    color: #263526;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.market-player-meta, .market-value {
+    color: #83907e;
+    font-size: 10px;
+}
+.market-prices {
+    flex: 0 0 auto;
+    justify-items: end;
+}
+.market-asking-price {
+    color: #476b32;
+    font-size: 11px;
 }
 .pitch-section, .bench-section {
     min-width: 0;

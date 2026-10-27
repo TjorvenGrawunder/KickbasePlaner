@@ -72,4 +72,18 @@ class KickbaseRequestServiceTests {
         assertThat(squad.path("it").get(0).path("pn").asText()).isEqualTo("Spieler");
         mockServer.verify();
     }
+
+    @Test
+    void getsTheCurrentMarketUsingTheSessionToken() {
+        mockServer.expect(requestTo("https://api.kickbase.com/v4/leagues/league-456/market"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("""
+                        {"it":[{"pi":"player-2","pn":"Marktspieler","mv":1200000}]}
+                        """, MediaType.APPLICATION_JSON));
+
+        var market = service.getCurrentMarket("session-token", "league-456");
+
+        assertThat(market.path("it").get(0).path("pn").asText()).isEqualTo("Marktspieler");
+        mockServer.verify();
+    }
 }

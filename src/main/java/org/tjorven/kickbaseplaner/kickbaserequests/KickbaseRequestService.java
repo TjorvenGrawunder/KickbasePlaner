@@ -68,4 +68,19 @@ public class KickbaseRequestService {
 
         return response;
     }
+
+    public JsonNode getCurrentMarket(String token, String leagueId) {
+        JsonNode response = restClient.get()
+                .uri("/v4/leagues/{leagueId}/market", leagueId)
+                .header("Authorization", "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .body(JsonNode.class);
+
+        if (response == null) {
+            throw new IllegalStateException("Kickbase returned an empty market response.");
+        }
+
+        return response;
+    }
 }

@@ -69,6 +69,12 @@
                 </button>
             </form>
 
+            <section id="saved-manager-section" class="saved-manager-section" aria-labelledby="saved-manager-title" hidden>
+                <h2 id="saved-manager-title">Gespeicherte Manager</h2>
+                <p id="saved-manager-message" class="saved-manager-message" role="status" aria-live="polite"></p>
+                <ul id="saved-manager-list" class="saved-manager-list" aria-label="Gespeicherte Kickbase-Manager"></ul>
+            </section>
+
             <div class="privacy-note">
                 <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path d="M10 2.5 16 5v4.2c0 4-2.5 6.7-6 8.3-3.5-1.6-6-4.3-6-8.3V5l6-2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -144,6 +150,13 @@
                 </div>
                 <button id="back-to-leagues" class="back-button" type="button">Liga wechseln</button>
             </div>
+            <div class="view-tabs" role="tablist" aria-label="Liga-Ansicht">
+                <button id="squad-tab" class="view-tab is-active" type="button" role="tab"
+                        aria-selected="true" aria-controls="squad-tab-panel">Kader</button>
+                <button id="market-tab" class="view-tab" type="button" role="tab"
+                        aria-selected="false" aria-controls="market-tab-panel">Transfermarkt</button>
+            </div>
+            <section id="squad-tab-panel" class="tab-panel" role="tabpanel" aria-labelledby="squad-tab">
             <div class="value-summary" aria-live="polite">
                 <div class="value-card starting-value-card">
                     <span class="value-label">STARTELF</span>
@@ -205,6 +218,19 @@
                     <p id="lineup-hint" class="lineup-hint" role="status" aria-live="polite"></p>
                 </section>
             </div>
+            </section>
+            <section id="market-tab-panel" class="tab-panel market-panel" role="tabpanel"
+                     aria-labelledby="market-tab" hidden>
+                <div class="market-heading">
+                    <div>
+                        <h3>Aktuelle Angebote</h3>
+                        <p>Spieler, die gerade auf dem Transfermarkt deiner Liga stehen.</p>
+                    </div>
+                    <button id="refresh-market" class="back-button market-refresh" type="button">Aktualisieren</button>
+                </div>
+                <p id="market-message" class="market-message" role="status" aria-live="polite"></p>
+                <ul id="market-list" class="market-list" aria-label="Spieler auf dem Transfermarkt"></ul>
+            </section>
         </section>
     </dialog>
 </main>
@@ -216,8 +242,13 @@
     const squadDialog = document.getElementById("squad-dialog");
     const leagueList = document.getElementById("league-list");
     const dialogError = document.getElementById("dialog-error");
+    const savedManagerSection = document.getElementById("saved-manager-section");
+    const savedManagerList = document.getElementById("saved-manager-list");
+    const savedManagerMessage = document.getElementById("saved-manager-message");
     let availableLeagues = [];
     let squadPlayers = [];
+    let selectedLeagueId = null;
+    let marketRequestId = 0;
     let startingPlayerIds = Array(11).fill(null);
     let draggedPlayerId = null;
     let lineupHint = "";
@@ -251,6 +282,74 @@
             throw new Error(result.message || "Die Anfrage konnte nicht verarbeitet werden.");
         }
         return result;
+    }
+
+    async function loadSavedManagers() {
+        try {
+            const response = await fetch("/api/kickbase/managers");
+            const managers = await response.json();
+            if (!response.ok) {
+                throw new Error(managers.message || "Gespeicherte Manager konnten nicht geladen werden.");
+            }
+            renderSavedManagers(managers);
+        } catch (error) {
+            savedManagerSection.hidden = false;
+            savedManagerList.replaceChildren();
+            savedManagerMessage.textContent = error.message;
+            savedManagerMessage.classList.add("error-notice");
+        }
+    }
+
+    function renderSavedManagers(managers) {
+        savedManagerList.replaceChildren();
+        savedManagerMessage.textContent = "";
+        savedManagerMessage.classList.remove("error-notice");
+        savedManagerSection.hidden = managers.length === 0;
+
+        for (const manager of managers) {
+            const item = document.createElement("li");
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "saved-manager-option";
+            const email = document.createElement("span");
+            email.className = "saved-manager-email";
+            email.textContent = manager.email;
+            const action = document.createElement("span");
+            action.className = "saved-manager-action";
+            action.textContent = "Anmelden →";
+            button.append(email, action);
+            button.addEventListener("click", () => loginSavedManager(manager, button));
+            item.append(button);
+            savedManagerList.append(item);
+        }
+    }
+
+    async function loginSavedManager(manager, selectedButton) {
+        const buttons = savedManagerList.querySelectorAll("button");
+        for (const button of buttons) {
+            button.disabled = true;
+        }
+        selectedButton.classList.add("is-loading");
+        savedManagerMessage.classList.remove("error-notice");
+        savedManagerMessage.textContent = "Anmeldung läuft …";
+
+        try {
+            const leagues = await postJson(
+                `/api/kickbase/managers/${encodeURIComponent(manager.id)}/login`,
+                {}
+            );
+            savedManagerMessage.textContent = "";
+            renderLeagues(leagues);
+            leagueDialog.showModal();
+        } catch (error) {
+            savedManagerMessage.textContent = error.message;
+            savedManagerMessage.classList.add("error-notice");
+        } finally {
+            for (const button of buttons) {
+                button.disabled = false;
+                button.classList.remove("is-loading");
+            }
+        }
     }
 
     function showDialogError(message) {
@@ -298,6 +397,7 @@
 
         try {
             const squad = await postJson("/api/kickbase/squad", { leagueId: league.id });
+            selectedLeagueId = league.id;
             squadPlayers = Array.isArray(squad.it) ? squad.it.map((player, index) => ({
                 id: String(player.pi || `player-${index}`),
                 name: player.pn || "Unbekannter Spieler",
@@ -310,6 +410,7 @@
             document.getElementById("squad-message").textContent =
                 `${squadPlayers.length} Spieler · Ziehe Spieler in die Aufstellung oder tippe sie an.`;
             renderSquad();
+            activateTab("squad");
             leagueDialog.close();
             squadDialog.showModal();
         } catch (error) {
@@ -319,6 +420,155 @@
                 button.classList.remove("is-loading");
             }
         }
+    }
+
+    function activateTab(tabName) {
+        const isMarketTab = tabName === "market";
+        const squadTab = document.getElementById("squad-tab");
+        const marketTab = document.getElementById("market-tab");
+        const squadPanel = document.getElementById("squad-tab-panel");
+        const marketPanel = document.getElementById("market-tab-panel");
+        squadTab.classList.toggle("is-active", !isMarketTab);
+        squadTab.setAttribute("aria-selected", String(!isMarketTab));
+        marketTab.classList.toggle("is-active", isMarketTab);
+        marketTab.setAttribute("aria-selected", String(isMarketTab));
+        squadPanel.hidden = isMarketTab;
+        marketPanel.hidden = !isMarketTab;
+
+        if (isMarketTab) {
+            loadMarket();
+        }
+    }
+
+    async function loadMarket() {
+        const requestId = ++marketRequestId;
+        const refreshButton = document.getElementById("refresh-market");
+        const marketMessage = document.getElementById("market-message");
+        const marketList = document.getElementById("market-list");
+        refreshButton.disabled = true;
+        marketMessage.classList.remove("error-notice");
+        marketMessage.textContent = "Transfermarkt wird geladen …";
+        marketList.replaceChildren();
+
+        try {
+            const market = await postJson("/api/kickbase/market", { leagueId: selectedLeagueId });
+            if (requestId !== marketRequestId) {
+                return;
+            }
+            console.log("MarketList JSON:", JSON.stringify(market, null, 2));
+            const players = Array.isArray(market.it) ? market.it : Array.isArray(market) ? market : null;
+            if (players === null) {
+                throw new Error("Kickbase hat eine unerwartete Transfermarkt-Antwort zurückgegeben.");
+            }
+            renderMarket(players);
+            marketMessage.textContent = players.length === 0
+                ? "Aktuell stehen keine Spieler auf dem Transfermarkt."
+                : `${players.length} Spieler auf dem Transfermarkt`;
+        } catch (error) {
+            if (requestId !== marketRequestId) {
+                return;
+            }
+            marketMessage.classList.add("error-notice");
+            marketMessage.textContent = error.message;
+        } finally {
+            if (requestId === marketRequestId) {
+                refreshButton.disabled = false;
+            }
+        }
+    }
+
+    function mapPosition(pos) {
+        switch (pos) {
+            case 4:
+                return "Angriff";
+            case 3:
+                return "Mittelfeld";
+            case 2:
+                return "Verteidigung";
+            case 1:
+                return "Tor";
+            default:
+                return pos;
+        }
+    }
+
+    function mapTeamID(teamId) {
+        const teamMap = {
+            2: "Bayern München",
+            3: "Borussia Dortmund",
+            43: "RB Leipzig",
+            77: "SV Elversberg",
+            4: "Eintracht Frankfurt",
+            5: "SC Freiburg",
+            40: "1. FC Union Berlin",
+            15: "Borussia Mönchengladbach",
+            18: "1. FSV Mainz 05",
+            9: "VfB Stuttgart",
+            14: "TSG Hoffenheim",
+            13: "FC Augsburg",
+            28: "1. FC Köln",
+            10: "Werder Bremen",
+            8: "FC Schalke 04",
+            7: "Bayer Leverkusen",
+            6: "Hamburger SV",
+            29: "SC Paderborn"
+        };
+        return teamMap[teamId] || `Team ${teamId}`;
+    }
+
+    function renderMarket(players) {
+        const marketList = document.getElementById("market-list");
+        marketList.replaceChildren();
+
+        for (const player of players) {
+            const item = document.createElement("li");
+            item.className = "market-item";
+            const details = document.createElement("div");
+            details.className = "market-player-details";
+            const name = document.createElement("strong");
+            name.className = "market-player-name";
+            name.textContent = player.fn + " " + player.n || "Unbekannter Spieler Hallo";
+            const metadata = document.createElement("span");
+            metadata.className = "market-player-meta";
+            const position = mapPosition(player.pos);
+            const teamName = mapTeamID(player.tid);
+            const expiresIn = player.exs || ""; // Sekundenzähler bis zum Ablauf des Angebots
+            const hours = Math.floor(expiresIn / 3600);
+            const minutes = Math.floor((expiresIn % 3600) / 60);
+            metadata.textContent = `${position} · ${teamName} · Angebot läuft ab in ${hours}h ${minutes}m`;
+            details.append(name);
+            if (metadata.textContent) {
+                details.append(metadata);
+            }
+
+            const prices = document.createElement("div");
+            prices.className = "market-prices";
+            const marketValue = Number(player.mv);
+            if (player.mv !== undefined && player.mv !== null && player.mv !== ""
+                    && Number.isFinite(marketValue)) {
+                const value = document.createElement("span");
+                value.className = "market-value";
+                value.textContent = `${euroFormatter.format(marketValue)} Marktwert`;
+                prices.append(value);
+            }
+            const askingPrice = Number(player.lo);
+            if (player.lo !== undefined && player.lo !== null && player.lo !== ""
+                    && Number.isFinite(askingPrice)) {
+                const price = document.createElement("strong");
+                price.className = "market-asking-price";
+                price.textContent = `${euroFormatter.format(askingPrice)} Angebot`;
+                prices.append(price);
+            }
+            item.append(details, prices);
+            marketList.append(item);
+        }
+        // Sortiere die Spieler nach Ablaufzeit des Angebots (exs)
+        const sortedPlayers = Array.from(marketList.children).sort((a, b) => {
+            const aExpires = Number(players[Array.from(marketList.children).indexOf(a)].exs);
+            const bExpires = Number(players[Array.from(marketList.children).indexOf(b)].exs);
+            return aExpires - bExpires;
+        });
+        marketList.replaceChildren(...sortedPlayers);
     }
 
     function createPlayerCard(player, className, slotIndex = null) {
@@ -522,6 +772,7 @@
                 email: loginForm.elements.email.value,
                 password: loginForm.elements.password.value
             });
+            await loadSavedManagers();
             renderLeagues(leagues);
             leagueDialog.showModal();
             loginForm.elements.password.value = "";
@@ -536,6 +787,9 @@
 
     document.getElementById("close-dialog").addEventListener("click", () => leagueDialog.close());
     document.getElementById("close-squad-dialog").addEventListener("click", () => squadDialog.close());
+    document.getElementById("squad-tab").addEventListener("click", () => activateTab("squad"));
+    document.getElementById("market-tab").addEventListener("click", () => activateTab("market"));
+    document.getElementById("refresh-market").addEventListener("click", loadMarket);
     document.getElementById("formation-select").addEventListener("change", (event) => {
         const nextFormation = event.target.value;
         remapLineup(nextFormation);
@@ -548,6 +802,8 @@
         squadDialog.close();
         leagueDialog.showModal();
     });
+
+    loadSavedManagers();
 </script>
 </body>
 </html>
