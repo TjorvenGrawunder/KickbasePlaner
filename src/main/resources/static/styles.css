@@ -597,12 +597,25 @@ button:focus-visible, .brand:focus-visible {
     font-size: 10px;
 }
 .market-prices {
+    display: grid;
     flex: 0 0 auto;
     justify-items: end;
+    gap: 4px;
+}
+.market-price-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 10px;
 }
 .market-asking-price {
     color: #476b32;
     font-size: 11px;
+}
+.market-highest-offer {
+    color: #398047;
+    font-size: 11px;
+    font-weight: 750;
 }
 .pitch-section, .bench-section {
     min-width: 0;

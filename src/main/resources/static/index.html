@@ -451,16 +451,30 @@
         marketList.replaceChildren();
 
         try {
-            const market = await postJson("/api/kickbase/market", { leagueId: selectedLeagueId });
+            const [marketResult, offersResult] = await Promise.allSettled([
+                postJson("/api/kickbase/market", { leagueId: selectedLeagueId }),
+                postJson("/api/kickbase/all_offers", { leagueId: selectedLeagueId })
+            ]);
             if (requestId !== marketRequestId) {
                 return;
             }
-            console.log("MarketList JSON:", JSON.stringify(market, null, 2));
+            if (offersResult.status === "fulfilled") {
+                console.log("All offers JSON:", JSON.stringify(offersResult.value, null, 2));
+            } else {
+                console.error("Could not load all offers:", offersResult.reason);
+            }
+            if (marketResult.status === "rejected") {
+                throw marketResult.reason;
+            }
+            const market = marketResult.value;
             const players = Array.isArray(market.it) ? market.it : Array.isArray(market) ? market : null;
             if (players === null) {
                 throw new Error("Kickbase hat eine unerwartete Transfermarkt-Antwort zurückgegeben.");
             }
-            renderMarket(players);
+            const highestOffers = offersResult.status === "fulfilled"
+                ? collectHighestOffers(offersResult.value)
+                : new Map();
+            renderMarket(players, highestOffers);
             marketMessage.textContent = players.length === 0
                 ? "Aktuell stehen keine Spieler auf dem Transfermarkt."
                 : `${players.length} Spieler auf dem Transfermarkt`;
@@ -516,7 +530,42 @@
         return teamMap[teamId] || `Team ${teamId}`;
     }
 
-    function renderMarket(players) {
+    function collectHighestOffers(managerOffers) {
+        const highestOffers = new Map();
+        if (!Array.isArray(managerOffers)) {
+            return highestOffers;
+        }
+
+        for (const managerOffer of managerOffers) {
+            const marketPlayers = managerOffer?.market?.it;
+            if (!Array.isArray(marketPlayers)) {
+                continue;
+            }
+            for (const player of marketPlayers) {
+                const playerId = player.i ?? player.pi ?? player.id;
+                if (playerId === undefined || playerId === null) {
+                    continue;
+                }
+                for (const offer of Array.isArray(player.ofs) ? player.ofs : []) {
+                    if (offer.uop === undefined || offer.uop === null || offer.uop === "") {
+                        continue;
+                    }
+                    const amount = Number(offer.uop);
+                    if (!Number.isFinite(amount)) {
+                        continue;
+                    }
+                    const key = String(playerId);
+                    if (!highestOffers.has(key) || amount > highestOffers.get(key)) {
+                        highestOffers.set(key, amount);
+                    }
+                }
+            }
+        }
+        console.log("Collected highest offers:", Array.from(highestOffers.entries()));
+        return highestOffers;
+    }
+
+    function renderMarket(players, highestOffers = new Map()) {
         const marketList = document.getElementById("market-list");
         marketList.replaceChildren();
 
@@ -543,13 +592,28 @@
 
             const prices = document.createElement("div");
             prices.className = "market-prices";
+            const priceRow = document.createElement("div");
+            priceRow.className = "market-price-row";
             const marketValue = Number(player.mv);
             if (player.mv !== undefined && player.mv !== null && player.mv !== ""
                     && Number.isFinite(marketValue)) {
                 const value = document.createElement("span");
                 value.className = "market-value";
                 value.textContent = `${euroFormatter.format(marketValue)} Marktwert`;
-                prices.append(value);
+                priceRow.append(value);
+            }
+            const playerId = player.i ?? player.pi ?? player.id;
+            const highestOffer = playerId === undefined || playerId === null
+                ? undefined
+                : highestOffers.get(String(playerId));
+            if (highestOffer !== undefined) {
+                const offer = document.createElement("strong");
+                offer.className = "market-highest-offer";
+                offer.textContent = `Höchstgebot ${euroFormatter.format(highestOffer)}`;
+                priceRow.append(offer);
+            }
+            if (priceRow.childElementCount > 0) {
+                prices.append(priceRow);
             }
             const askingPrice = Number(player.lo);
             if (player.lo !== undefined && player.lo !== null && player.lo !== ""

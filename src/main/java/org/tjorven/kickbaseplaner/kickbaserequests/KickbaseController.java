@@ -3,6 +3,8 @@ package org.tjorven.kickbaseplaner.kickbaserequests;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/kickbase")
 public class KickbaseController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KickbaseController.class);
     private static final String TOKEN_ATTRIBUTE = "kickbaseToken";
     private static final String MANAGER_ID_ATTRIBUTE = "kickbaseManagerId";
     private static final String LEAGUE_IDS_ATTRIBUTE = "kickbaseLeagueIds";
@@ -110,8 +113,37 @@ public class KickbaseController {
         return kickbaseRequestService.getCurrentMarket(token, request.leagueId());
     }
 
+    @PostMapping("/all_offers")
+    public List<KickbaseRequestService.ManagerOffers> getAllOffers(
+            @Valid @RequestBody KickbaseSquadRequest request,
+            HttpSession session
+    ) {
+        String token = (String) session.getAttribute(TOKEN_ATTRIBUTE);
+        String managerId = (String) session.getAttribute(MANAGER_ID_ATTRIBUTE);
+        Object leagueIdsValue = session.getAttribute(LEAGUE_IDS_ATTRIBUTE);
+        if (token == null || managerId == null || !(leagueIdsValue instanceof Set<?> leagueIds)) {
+            throw new KickbaseSessionException();
+        }
+        if (!leagueIds.contains(request.leagueId())) {
+            throw new IllegalArgumentException("The selected league is not available in this session.");
+        }
+
+        List<KickbaseLoginResult> leagueManagers = savedManagerStore.findAll().stream()
+                .map(manager -> {
+                    SavedKickbaseManagerStore.Credentials credentials =
+                            savedManagerStore.findCredentials(manager.id());
+                    return kickbaseRequestService.login(credentials.email(), credentials.password());
+                })
+                .filter(manager -> manager.leagues().stream()
+                        .anyMatch(league -> league.id().equals(request.leagueId())))
+                .toList();
+
+        return kickbaseRequestService.getAllOffers(request.leagueId(), leagueManagers);
+    }
+
     @ExceptionHandler(RestClientResponseException.class)
     public ResponseEntity<ApiError> handleKickbaseError(RestClientResponseException exception) {
+        LOGGER.warn("Kickbase request failed with HTTP status {}", exception.getStatusCode().value());
         if (exception.getStatusCode().value() == HttpStatus.UNAUTHORIZED.value()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiError("Die Kickbase-Anmeldung ist fehlgeschlagen. Bitte prüfe deine Zugangsdaten."));
