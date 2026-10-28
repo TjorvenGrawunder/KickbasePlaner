@@ -569,7 +569,19 @@
         const marketList = document.getElementById("market-list");
         marketList.replaceChildren();
 
-        for (const player of players) {
+        const sortedPlayers = [...players].sort((a, b) => {
+            const aExpires = a.exs === undefined || a.exs === null || a.exs === ""
+                ? Number.POSITIVE_INFINITY
+                : Number(a.exs);
+            const bExpires = b.exs === undefined || b.exs === null || b.exs === ""
+                ? Number.POSITIVE_INFINITY
+                : Number(b.exs);
+            const safeAExpires = Number.isFinite(aExpires) ? aExpires : Number.POSITIVE_INFINITY;
+            const safeBExpires = Number.isFinite(bExpires) ? bExpires : Number.POSITIVE_INFINITY;
+            return safeAExpires - safeBExpires;
+        });
+
+        for (const player of sortedPlayers) {
             const item = document.createElement("li");
             item.className = "market-item";
             const details = document.createElement("div");
@@ -626,13 +638,6 @@
             item.append(details, prices);
             marketList.append(item);
         }
-        // Sortiere die Spieler nach Ablaufzeit des Angebots (exs)
-        const sortedPlayers = Array.from(marketList.children).sort((a, b) => {
-            const aExpires = Number(players[Array.from(marketList.children).indexOf(a)].exs);
-            const bExpires = Number(players[Array.from(marketList.children).indexOf(b)].exs);
-            return aExpires - bExpires;
-        });
-        marketList.replaceChildren(...sortedPlayers);
     }
 
     function createPlayerCard(player, className, slotIndex = null) {
