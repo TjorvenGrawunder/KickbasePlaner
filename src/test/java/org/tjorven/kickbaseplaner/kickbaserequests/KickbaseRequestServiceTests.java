@@ -7,8 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
@@ -89,31 +87,4 @@ class KickbaseRequestServiceTests {
         mockServer.verify();
     }
 
-    @Test
-    void getsOffersForEveryManagerUsingTheirSessionTokens() {
-        mockServer.expect(requestTo("https://api.kickbase.com/v4/leagues/league-456/market"))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess("""
-                        {"it":[{"pi":"player-2","ofs":[{"price":1300000}]}]}
-                        """, MediaType.APPLICATION_JSON));
-        mockServer.expect(requestTo("https://api.kickbase.com/v4/leagues/league-456/market"))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess("""
-                        {"it":[{"pi":"player-2","ofs":[{"price":1500000}]}]}
-                        """, MediaType.APPLICATION_JSON));
-
-        var offers = service.getAllOffers("league-456", List.of(
-                new KickbaseLoginResult("token-1", "manager-123", List.of()),
-                new KickbaseLoginResult("token-2", "manager-456", List.of())
-        ));
-
-        assertThat(offers).hasSize(2);
-        assertThat(offers.get(0).managerId()).isEqualTo("manager-123");
-        assertThat(offers.get(0).market().path("it").get(0).path("ofs").get(0).path("price").asInt())
-                .isEqualTo(1300000);
-        assertThat(offers.get(1).managerId()).isEqualTo("manager-456");
-        assertThat(offers.get(1).market().path("it").get(0).path("ofs").get(0).path("price").asInt())
-                .isEqualTo(1500000);
-        mockServer.verify();
-    }
 }

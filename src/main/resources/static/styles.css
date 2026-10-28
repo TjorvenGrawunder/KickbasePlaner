@@ -193,75 +193,108 @@ button:focus-visible, .brand:focus-visible {
     outline-offset: 4px;
 }
 .login-panel button:disabled { cursor: wait; opacity: .72; }
-.saved-manager-section {
-    margin-top: 26px;
+.admin-panel {
+    margin-top: 30px;
     padding-top: 22px;
     border-top: 1px solid #edf0ea;
 }
-.saved-manager-section h2 {
-    margin-bottom: 5px;
-    color: #354238;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 750;
-    letter-spacing: 0;
+.admin-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
 }
-.saved-manager-message {
-    margin: 0 0 10px;
+.admin-heading h2 {
+    margin: 0;
+    color: #263526;
+    font-family: "Manrope", "Segoe UI", sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -.6px;
+}
+.admin-heading .dialog-eyebrow { margin-bottom: 6px; }
+.admin-heading .back-button { margin-top: 3px; }
+.admin-panel .field { margin-bottom: 8px; }
+.admin-panel #weekly-tokens { padding: 0 15px; }
+.admin-panel form > button { margin-top: 14px; }
+.admin-hint {
+    margin: 0;
     color: #788278;
     font-size: 11px;
     line-height: 1.6;
 }
-.saved-manager-message.error-notice { margin: 0 0 12px; }
-.saved-manager-list {
+.admin-panel .notice {
+    margin: 0 0 14px;
+    color: #788278;
+    font-size: 11px;
+}
+.admin-manager-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #edf0ea;
+}
+.admin-manager-section h3 {
+    margin: 0 0 7px;
+    color: #354238;
+    font-size: 13px;
+}
+.admin-manager-token-list {
     display: grid;
-    gap: 7px;
-    margin: 0;
+    gap: 8px;
+    margin: 14px 0 0;
     padding: 0;
     list-style: none;
 }
-.saved-manager-option {
-    display: flex;
-    width: 100%;
-    min-height: 46px;
+.admin-manager-token-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 0;
+    gap: 6px 12px;
     padding: 10px 12px;
     border: 1px solid #e8ece4;
     border-radius: 10px;
     background: #fbfcfa;
-    color: #354238;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-    box-shadow: none;
-    transition: border-color 150ms ease, background 150ms ease;
 }
-.saved-manager-option:hover {
-    transform: none;
-    border-color: #bdd89e;
-    background: #f5faef;
-    box-shadow: none;
-}
-.saved-manager-option:disabled { cursor: wait; opacity: .65; }
-.saved-manager-option.is-loading {
-    border-color: #b7d497;
-    background: #f5faef;
-}
-.saved-manager-email {
+.admin-manager-token-email {
+    min-width: 0;
     overflow: hidden;
-    font-size: 12px;
+    color: #354238;
+    font-size: 11px;
     font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.saved-manager-action {
-    flex: 0 0 auto;
-    color: #6d9444;
+.admin-manager-token-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.admin-manager-token-form input {
+    width: 68px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 8px;
     font-size: 11px;
-    font-weight: 700;
+}
+.admin-manager-token-form button {
+    width: auto;
+    min-height: 34px;
+    margin: 0;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    box-shadow: none;
+}
+.admin-manager-token-message {
+    grid-column: 1 / -1;
+    color: #788278;
+    font-size: 10px;
+}
+.admin-manager-token-message.error-notice { color: #a53d2a; }
+.admin-manager-token-empty {
+    color: #788278;
+    font-size: 11px;
 }
 .button-arrow {
     display: grid;
@@ -560,6 +593,13 @@ button:focus-visible, .brand:focus-visible {
     line-height: 1.6;
 }
 .market-message.error-notice { margin: 0 0 12px; }
+.market-token-balance {
+    margin: 0 0 8px;
+    color: #476b32;
+    font-size: 11px;
+    font-weight: 700;
+}
+.market-token-balance.error-notice { color: #a53d2a; }
 .market-list {
     display: grid;
     gap: 8px;
@@ -616,6 +656,35 @@ button:focus-visible, .brand:focus-visible {
     color: #398047;
     font-size: 11px;
     font-weight: 750;
+}
+.market-no-offer {
+    color: #b43e35;
+    font-size: 11px;
+    font-weight: 750;
+}
+.market-reveal-button {
+    width: auto;
+    min-height: 30px;
+    margin: 0;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: #edf5e6;
+    color: #456b30;
+    font-size: 10px;
+    box-shadow: none;
+}
+.market-reveal-button:hover {
+    transform: none;
+    background: #e2efd5;
+    color: #365626;
+    box-shadow: none;
+}
+.market-reveal-button:disabled { cursor: wait; opacity: .65; }
+.market-reveal-message {
+    max-width: 180px;
+    color: #788278;
+    font-size: 9px;
+    text-align: right;
 }
 .pitch-section, .bench-section {
     min-width: 0;

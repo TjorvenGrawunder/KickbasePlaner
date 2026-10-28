@@ -39,9 +39,9 @@
                         <input
                                 id="email"
                                 name="email"
-                                type="email"
+                                type="text"
                                 placeholder="name@beispiel.de"
-                                autocomplete="email"
+                                autocomplete="username"
                                 required>
                     </div>
                 </div>
@@ -69,10 +69,30 @@
                 </button>
             </form>
 
-            <section id="saved-manager-section" class="saved-manager-section" aria-labelledby="saved-manager-title" hidden>
-                <h2 id="saved-manager-title">Gespeicherte Manager</h2>
-                <p id="saved-manager-message" class="saved-manager-message" role="status" aria-live="polite"></p>
-                <ul id="saved-manager-list" class="saved-manager-list" aria-label="Gespeicherte Kickbase-Manager"></ul>
+            <section id="admin-panel" class="admin-panel" aria-labelledby="admin-title" hidden>
+                <div class="admin-heading">
+                    <div>
+                        <p class="dialog-eyebrow">Adminbereich</p>
+                        <h2 id="admin-title">Einstellungen</h2>
+                    </div>
+                    <button id="admin-logout" class="back-button" type="button">Abmelden</button>
+                </div>
+                <form id="admin-settings-form">
+                    <p id="admin-settings-message" class="notice" role="status" aria-live="polite" hidden></p>
+                    <div class="field">
+                        <label for="weekly-tokens">Tokens pro Manager und Woche</label>
+                        <div class="input-wrap">
+                            <input id="weekly-tokens" name="weeklyTokens" type="number" min="0" max="1000" required>
+                        </div>
+                    </div>
+                    <p class="admin-hint">Der eingestellte Wert gilt ab der nächsten Auffüllung freitags um 20:30 Uhr (Europe/Berlin).</p>
+                    <button type="submit">Einstellung speichern</button>
+                </form>
+                <section class="admin-manager-section" aria-labelledby="admin-manager-title">
+                    <h3 id="admin-manager-title">Manager-Tokens</h3>
+                    <p class="admin-hint">Aktueller Tokenstand der gespeicherten Manager; Änderungen gelten bis zur nächsten Auffüllung.</p>
+                    <ul id="admin-manager-token-list" class="admin-manager-token-list"></ul>
+                </section>
             </section>
 
             <div class="privacy-note">
@@ -228,6 +248,9 @@
                     </div>
                     <button id="refresh-market" class="back-button market-refresh" type="button">Aktualisieren</button>
                 </div>
+                <p id="market-token-balance" class="market-token-balance" role="status" aria-live="polite">
+                    Tokens werden geladen …
+                </p>
                 <p id="market-message" class="market-message" role="status" aria-live="polite"></p>
                 <ul id="market-list" class="market-list" aria-label="Spieler auf dem Transfermarkt"></ul>
             </section>
@@ -242,13 +265,15 @@
     const squadDialog = document.getElementById("squad-dialog");
     const leagueList = document.getElementById("league-list");
     const dialogError = document.getElementById("dialog-error");
-    const savedManagerSection = document.getElementById("saved-manager-section");
-    const savedManagerList = document.getElementById("saved-manager-list");
-    const savedManagerMessage = document.getElementById("saved-manager-message");
+    const adminPanel = document.getElementById("admin-panel");
+    const adminSettingsForm = document.getElementById("admin-settings-form");
+    const adminSettingsMessage = document.getElementById("admin-settings-message");
+    const adminManagerTokenList = document.getElementById("admin-manager-token-list");
     let availableLeagues = [];
     let squadPlayers = [];
     let selectedLeagueId = null;
     let marketRequestId = 0;
+    const revealedOffers = new Map();
     let startingPlayerIds = Array(11).fill(null);
     let draggedPlayerId = null;
     let lineupHint = "";
@@ -284,71 +309,85 @@
         return result;
     }
 
-    async function loadSavedManagers() {
+    async function getJson(url) {
+        const response = await fetch(url);
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || "Die Anfrage konnte nicht verarbeitet werden.");
+        }
+        return result;
+    }
+
+    async function loadAdminSettings() {
+        adminSettingsMessage.textContent = "";
+        adminSettingsMessage.classList.remove("error-notice");
+        adminSettingsMessage.hidden = true;
         try {
-            const response = await fetch("/api/kickbase/managers");
-            const managers = await response.json();
-            if (!response.ok) {
-                throw new Error(managers.message || "Gespeicherte Manager konnten nicht geladen werden.");
-            }
-            renderSavedManagers(managers);
+            const settings = await getJson("/api/kickbase/admin/settings");
+            adminSettingsForm.elements.weeklyTokens.value = settings.weeklyTokens;
+            renderAdminManagerTokens(settings.managers);
         } catch (error) {
-            savedManagerSection.hidden = false;
-            savedManagerList.replaceChildren();
-            savedManagerMessage.textContent = error.message;
-            savedManagerMessage.classList.add("error-notice");
+            adminSettingsMessage.textContent = error.message;
+            adminSettingsMessage.classList.add("error-notice");
+            adminSettingsMessage.hidden = false;
         }
     }
 
-    function renderSavedManagers(managers) {
-        savedManagerList.replaceChildren();
-        savedManagerMessage.textContent = "";
-        savedManagerMessage.classList.remove("error-notice");
-        savedManagerSection.hidden = managers.length === 0;
+    function showAdminPanel() {
+        loginForm.hidden = true;
+        adminPanel.hidden = false;
+        loadAdminSettings();
+    }
 
+    function renderAdminManagerTokens(managers) {
+        adminManagerTokenList.replaceChildren();
         for (const manager of managers) {
             const item = document.createElement("li");
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "saved-manager-option";
+            item.className = "admin-manager-token-item";
             const email = document.createElement("span");
-            email.className = "saved-manager-email";
+            email.className = "admin-manager-token-email";
             email.textContent = manager.email;
-            const action = document.createElement("span");
-            action.className = "saved-manager-action";
-            action.textContent = "Anmelden →";
-            button.append(email, action);
-            button.addEventListener("click", () => loginSavedManager(manager, button));
-            item.append(button);
-            savedManagerList.append(item);
+            const form = document.createElement("form");
+            form.className = "admin-manager-token-form";
+            const input = document.createElement("input");
+            input.type = "number";
+            input.min = "0";
+            input.max = "1000";
+            input.required = true;
+            input.value = manager.remaining;
+            input.setAttribute("aria-label", `Tokens für ${manager.email}`);
+            const button = document.createElement("button");
+            button.type = "submit";
+            button.textContent = "Speichern";
+            const message = document.createElement("span");
+            message.className = "admin-manager-token-message";
+            form.append(input, button);
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                button.disabled = true;
+                message.textContent = "Speichert …";
+                try {
+                    const updated = await postJson(
+                        `/api/kickbase/admin/managers/${encodeURIComponent(manager.id)}/tokens`,
+                        { remaining: Number(input.value) }
+                    );
+                    input.value = updated.remaining;
+                    message.textContent = "Gespeichert";
+                } catch (error) {
+                    message.textContent = error.message;
+                    message.classList.add("error-notice");
+                } finally {
+                    button.disabled = false;
+                }
+            });
+            item.append(email, form, message);
+            adminManagerTokenList.append(item);
         }
-    }
-
-    async function loginSavedManager(manager, selectedButton) {
-        const buttons = savedManagerList.querySelectorAll("button");
-        for (const button of buttons) {
-            button.disabled = true;
-        }
-        selectedButton.classList.add("is-loading");
-        savedManagerMessage.classList.remove("error-notice");
-        savedManagerMessage.textContent = "Anmeldung läuft …";
-
-        try {
-            const leagues = await postJson(
-                `/api/kickbase/managers/${encodeURIComponent(manager.id)}/login`,
-                {}
-            );
-            savedManagerMessage.textContent = "";
-            renderLeagues(leagues);
-            leagueDialog.showModal();
-        } catch (error) {
-            savedManagerMessage.textContent = error.message;
-            savedManagerMessage.classList.add("error-notice");
-        } finally {
-            for (const button of buttons) {
-                button.disabled = false;
-                button.classList.remove("is-loading");
-            }
+        if (managers.length === 0) {
+            const emptyMessage = document.createElement("li");
+            emptyMessage.className = "admin-manager-token-empty";
+            emptyMessage.textContent = "Noch keine Manager gespeichert.";
+            adminManagerTokenList.append(emptyMessage);
         }
     }
 
@@ -451,17 +490,19 @@
         marketList.replaceChildren();
 
         try {
-            const [marketResult, offersResult] = await Promise.allSettled([
+            const [marketResult, tokenResult] = await Promise.allSettled([
                 postJson("/api/kickbase/market", { leagueId: selectedLeagueId }),
-                postJson("/api/kickbase/all_offers", { leagueId: selectedLeagueId })
+                getJson(`/api/kickbase/market/tokens?leagueId=${encodeURIComponent(selectedLeagueId)}`)
             ]);
             if (requestId !== marketRequestId) {
                 return;
             }
-            if (offersResult.status === "fulfilled") {
-                console.log("All offers JSON:", JSON.stringify(offersResult.value, null, 2));
+            const tokenBalance = document.getElementById("market-token-balance");
+            if (tokenResult.status === "fulfilled") {
+                renderTokenBalance(tokenResult.value);
             } else {
-                console.error("Could not load all offers:", offersResult.reason);
+                tokenBalance.textContent = tokenResult.reason.message;
+                tokenBalance.classList.add("error-notice");
             }
             if (marketResult.status === "rejected") {
                 throw marketResult.reason;
@@ -471,10 +512,13 @@
             if (players === null) {
                 throw new Error("Kickbase hat eine unerwartete Transfermarkt-Antwort zurückgegeben.");
             }
-            const highestOffers = offersResult.status === "fulfilled"
-                ? collectHighestOffers(offersResult.value)
-                : new Map();
-            renderMarket(players, highestOffers);
+            if (tokenResult.status === "fulfilled") {
+                await refreshUnlockedOffers(players, tokenResult.value);
+            }
+            if (requestId !== marketRequestId) {
+                return;
+            }
+            renderMarket(players);
             marketMessage.textContent = players.length === 0
                 ? "Aktuell stehen keine Spieler auf dem Transfermarkt."
                 : `${players.length} Spieler auf dem Transfermarkt`;
@@ -530,42 +574,51 @@
         return teamMap[teamId] || `Team ${teamId}`;
     }
 
-    function collectHighestOffers(managerOffers) {
-        const highestOffers = new Map();
-        if (!Array.isArray(managerOffers)) {
-            return highestOffers;
-        }
-
-        for (const managerOffer of managerOffers) {
-            const marketPlayers = managerOffer?.market?.it;
-            if (!Array.isArray(marketPlayers)) {
-                continue;
-            }
-            for (const player of marketPlayers) {
-                const playerId = player.i ?? player.pi ?? player.id;
-                if (playerId === undefined || playerId === null) {
-                    continue;
-                }
-                for (const offer of Array.isArray(player.ofs) ? player.ofs : []) {
-                    if (offer.uop === undefined || offer.uop === null || offer.uop === "") {
-                        continue;
-                    }
-                    const amount = Number(offer.uop);
-                    if (!Number.isFinite(amount)) {
-                        continue;
-                    }
-                    const key = String(playerId);
-                    if (!highestOffers.has(key) || amount > highestOffers.get(key)) {
-                        highestOffers.set(key, amount);
-                    }
-                }
-            }
-        }
-        console.log("Collected highest offers:", Array.from(highestOffers.entries()));
-        return highestOffers;
+    function renderTokenBalance(balance) {
+        const tokenBalance = document.getElementById("market-token-balance");
+        tokenBalance.classList.remove("error-notice");
+        tokenBalance.textContent =
+            `${balance.remaining} von ${balance.weeklyCount} Tokens verfügbar · Erneuerung freitags um 20:30 Uhr`;
     }
 
-    function renderMarket(players, highestOffers = new Map()) {
+    async function refreshUnlockedOffers(players, tokenStatus) {
+        const unlockedIds = new Set(tokenStatus.unlockedPlayerIds.map(String));
+        for (const key of revealedOffers.keys()) {
+            if (key.startsWith(`${selectedLeagueId}:`)
+                    && !unlockedIds.has(key.slice(selectedLeagueId.length + 1))) {
+                revealedOffers.delete(key);
+            }
+        }
+        const unlockedPlayers = players.map((player) => {
+            const playerId = player.i ?? player.pi ?? player.id;
+            return playerId === undefined || playerId === null
+                ? null
+                : { playerId, key: `${selectedLeagueId}:${playerId}` };
+        }).filter((player) => player !== null && unlockedIds.has(String(player.playerId)));
+        for (const { key } of unlockedPlayers) {
+            if (!revealedOffers.has(key)) {
+                revealedOffers.set(key, { highestOffer: null, error: null });
+            }
+        }
+        await Promise.all(unlockedPlayers.map(async ({ playerId, key }) => {
+            try {
+                const result = await getJson(
+                    `/api/kickbase/market/${encodeURIComponent(playerId)}/highest-offer`
+                        + `?leagueId=${encodeURIComponent(selectedLeagueId)}`
+                );
+                if (!result.unlocked) {
+                    revealedOffers.delete(key);
+                } else {
+                    revealedOffers.set(key, { highestOffer: result.highestOffer, error: null });
+                    renderTokenBalance(result.balance);
+                }
+            } catch (error) {
+                revealedOffers.set(key, { highestOffer: null, error: error.message });
+            }
+        }));
+    }
+
+    function renderMarket(players) {
         const marketList = document.getElementById("market-list");
         marketList.replaceChildren();
 
@@ -615,14 +668,40 @@
                 priceRow.append(value);
             }
             const playerId = player.i ?? player.pi ?? player.id;
-            const highestOffer = playerId === undefined || playerId === null
+            const revealKey = playerId === undefined || playerId === null
+                ? null
+                : `${selectedLeagueId}:${playerId}`;
+            const revealState = playerId === undefined || playerId === null
                 ? undefined
-                : highestOffers.get(String(playerId));
-            if (highestOffer !== undefined) {
-                const offer = document.createElement("strong");
-                offer.className = "market-highest-offer";
-                offer.textContent = `Höchstgebot ${euroFormatter.format(highestOffer)}`;
-                priceRow.append(offer);
+                : revealedOffers.get(revealKey);
+            if (revealState !== undefined) {
+                if (revealState.error) {
+                    const error = document.createElement("span");
+                    error.className = "market-no-offer";
+                    error.textContent = revealState.error;
+                    priceRow.append(error);
+                } else if (revealState.highestOffer === null) {
+                    const noOffer = document.createElement("span");
+                    noOffer.className = "market-no-offer";
+                    noOffer.textContent = "Kein Gebot";
+                    priceRow.append(noOffer);
+                } else {
+                    const offer = document.createElement("strong");
+                    offer.className = "market-highest-offer";
+                    offer.textContent = `Höchstgebot ${euroFormatter.format(revealState.highestOffer)}`;
+                    priceRow.append(offer);
+                }
+            } else if (playerId !== undefined && playerId !== null) {
+                const revealButton = document.createElement("button");
+                revealButton.type = "button";
+                revealButton.className = "market-reveal-button";
+                revealButton.textContent = "Gebot mit Token anzeigen";
+                const revealMessage = document.createElement("span");
+                revealMessage.className = "market-reveal-message";
+                revealButton.addEventListener("click", () =>
+                    redeemMarketToken(playerId, revealKey, revealButton, revealMessage)
+                );
+                prices.append(revealButton, revealMessage);
             }
             if (priceRow.childElementCount > 0) {
                 prices.append(priceRow);
@@ -637,6 +716,23 @@
             }
             item.append(details, prices);
             marketList.append(item);
+        }
+    }
+
+    async function redeemMarketToken(playerId, revealKey, button, message) {
+        button.disabled = true;
+        message.textContent = "Gebot wird geladen …";
+        try {
+            const result = await postJson(
+                `/api/kickbase/market/${encodeURIComponent(playerId)}/highest-offer`,
+                { leagueId: selectedLeagueId }
+            );
+            renderTokenBalance(result);
+            revealedOffers.set(revealKey, { highestOffer: result.highestOffer, error: null });
+            loadMarket();
+        } catch (error) {
+            message.textContent = error.message;
+            button.disabled = false;
         }
     }
 
@@ -837,11 +933,15 @@
         loginButton.querySelector(".button-label").textContent = "Anmeldung läuft …";
 
         try {
-            const leagues = await postJson("/api/kickbase/login", {
-                email: loginForm.elements.email.value,
-                password: loginForm.elements.password.value
-            });
-            await loadSavedManagers();
+            const email = loginForm.elements.email.value;
+            const password = loginForm.elements.password.value;
+            if (email === "admin") {
+                await postJson("/api/kickbase/admin/login", { email, password });
+                loginForm.elements.password.value = "";
+                showAdminPanel();
+                return;
+            }
+            const leagues = await postJson("/api/kickbase/login", { email, password });
             renderLeagues(leagues);
             leagueDialog.showModal();
             loginForm.elements.password.value = "";
@@ -851,6 +951,42 @@
         } finally {
             loginButton.disabled = false;
             loginButton.querySelector(".button-label").textContent = "Anmelden";
+        }
+    });
+
+    adminSettingsForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitButton = adminSettingsForm.querySelector("button[type=submit]");
+        submitButton.disabled = true;
+        adminSettingsMessage.classList.remove("error-notice");
+        adminSettingsMessage.hidden = false;
+        adminSettingsMessage.textContent = "Einstellung wird gespeichert …";
+        try {
+            const settings = await postJson("/api/kickbase/admin/settings", {
+                weeklyTokens: Number(adminSettingsForm.elements.weeklyTokens.value)
+            });
+            adminSettingsForm.elements.weeklyTokens.value = settings.weeklyTokens;
+            adminSettingsMessage.textContent =
+                `Gespeichert: ${settings.weeklyTokens} Tokens pro Manager und Woche.`;
+        } catch (error) {
+            adminSettingsMessage.textContent = error.message;
+            adminSettingsMessage.classList.add("error-notice");
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    document.getElementById("admin-logout").addEventListener("click", async () => {
+        try {
+            await postJson("/api/kickbase/admin/logout", {});
+            adminPanel.hidden = true;
+            loginForm.hidden = false;
+            loginForm.elements.password.value = "";
+            loginError.hidden = true;
+        } catch (error) {
+            adminSettingsMessage.textContent = error.message;
+            adminSettingsMessage.classList.add("error-notice");
+            adminSettingsMessage.hidden = false;
         }
     });
 
@@ -872,7 +1008,6 @@
         leagueDialog.showModal();
     });
 
-    loadSavedManagers();
 </script>
 </body>
 </html>

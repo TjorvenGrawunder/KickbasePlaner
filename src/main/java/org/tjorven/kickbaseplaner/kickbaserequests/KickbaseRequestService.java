@@ -84,15 +84,4 @@ public class KickbaseRequestService {
         return response;
     }
 
-    public List<ManagerOffers> getAllOffers(String leagueId, List<KickbaseLoginResult> managers) {
-        List<ManagerOffers> allOffers = new ArrayList<>();
-        for (KickbaseLoginResult manager : managers) {
-            JsonNode market = getCurrentMarket(manager.token(), leagueId);
-            allOffers.add(new ManagerOffers(manager.managerId(), market));
-        }
-        return List.copyOf(allOffers);
-    }
-
-    public record ManagerOffers(String managerId, JsonNode market) {
-    }
 }
