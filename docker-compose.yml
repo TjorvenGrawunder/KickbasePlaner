@@ -1,0 +1,15 @@
+services:
+  kickbase-planer:
+    build:
+      context: .
+    ports:
+      - "${KICKBASE_PORT:-18080}:8080"
+    environment:
+      KICKBASE_ADMIN_PASSWORD: ${KICKBASE_ADMIN_PASSWORD:-}
+      KICKBASE_CREDENTIALS_ENCRYPTION_KEY: ${KICKBASE_CREDENTIALS_ENCRYPTION_KEY:-}
+    volumes:
+      - kickbase-data:/data
+    restart: unless-stopped
+
+volumes:
+  kickbase-data:
