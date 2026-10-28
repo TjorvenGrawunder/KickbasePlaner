@@ -17,7 +17,7 @@ COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod 755 /app/docker-entrypoint.sh
 
 ENV HOME=/data
-EXPOSE 8080
+EXPOSE 18080
 VOLUME ["/data"]
 USER app
 
